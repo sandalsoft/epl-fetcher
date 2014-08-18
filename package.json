@@ -1,0 +1,30 @@
+{
+  "name": "fetch_data",
+  "version": "0.0.1",
+  "description": "Fetches FPS data",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "@sandalsoft",
+  "license": "Proprietary for now",
+  "dependencies": {
+    "mongodb": "^1.4.7",
+    "mongoose": "^3.8.14",
+    "requests": "^0.0.1"
+  },
+  "devDependencies": {
+    "underscore": "^1.6.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/sandalsoft/FootieViz_API.git"
+  },
+  "keywords": [
+    "epl"
+  ],
+  "bugs": {
+    "url": "https://github.com/sandalsoft/FootieViz_API/issues"
+  },
+  "homepage": "https://github.com/sandalsoft/FootieViz_API"
+}
