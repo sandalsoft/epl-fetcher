@@ -39,7 +39,7 @@ module.exports = {
             }
             if (res.statusCode > 300 && res.statusCode < 303)  {
               console.log('Got 300.  Site is updateding. ');
-              process.kill();
+              process.exit();
             }
         }
     }
