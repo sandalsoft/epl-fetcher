@@ -17,7 +17,7 @@
     "requests": "^0.0.1"
   },
   "devDependencies": {
-    "httpsync": "0.0.8",
+    "request": "^2.40.0",
     "underscore": "^1.6.0"
   },
   "repository": {
