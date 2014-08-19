@@ -1,6 +1,5 @@
 #!/app/vendor/node/bin/node
 
-httpsync = require('httpsync');
 mongoose = require('mongoose');
 request = require('request');
 async = require('async');
@@ -101,89 +100,98 @@ function runEPLFetcher() {
 
   var totalPlayers = 0;
   // Get max num of players by iterating GETs until 404. 
-  getMaxPlayerId(function(id) {
-      totalPlayers = id;
-  });
-
-  // Create array of player IDs to loop through and grab data
-  var playerIdsArray = _.range(1, totalPlayers);
-
-  // Dispatch async workers to fetch data for each playerID in array
-  async.each(playerIdsArray, function(player_id, callback) {
-    var playerUrl = PLAYER_DATA_URL + player_id + '/';
-
-    // GET player JSON from premierleague.com API
-    request(playerUrl, function(error, response, body) {
-      console.log('Requesting data for: ' + player_id);
-      if (!error && response.statusCode == 200) {
-        
-        // Parse json into object
-        var playerJson = JSON.parse(body);
-        console.log('Received data for: ' + playerJson.id + '-' + playerJson.web_name);
-
-        // create Player model from schema
-        var Player = mongoose.model('Player', playerSchema);
-
-        // Instantiace concrete player with data from API
-        var player = new Player(playerJson);
-
-        // create embedded data in player record
-        player.fixtures.summary = playerJson.fixtures.summary;
-        player.fixtures.all = playerJson.fixtures.all;
-        player.fixture_history.summary = playerJson.fixture_history.summary;
-        player.fixture_history.all = playerJson.fixture_history.all;
-        player.player_id = player_id;
-        player.last_updated = Date.now();
-
-        // Query to find player by player_id so we can update it
-        var query = { 'player_id': player.player_id };
-
-        // Update Player record with data from API
-        Player.update({player_id: player_id}, player.toObject(), {upsert: true}, 
-          function(err, doc) {
-            if (err)
-              // log error if can't write data to database
-              console.log('ERROR UPDATING : ' + player._id + ' err: ' + err);
-            else {
-              console.log('Updated record for: ' + player.web_name);
-              callback();
-            }
-        }); //Player.update()
-      } // if 200 && no error
-    }); //request
-  }, //async.each()
-  function(err) {
-    if(err) { 
-      // One of the iterations produced an error.  
-      // All processing will now stop.
-      console.log('A player failed to process: ' + err);
-    } 
-    else { 
-      // No errors.  Processing done.  Close db and end process
-      console.log('All players have been processed successfully');
-      db.close();
+  getMaxPlayerId(STARTING_PLAYER_ID, function(err, totalPlayers) {
+    if (err) { 
+      console.log(err);
       process.exit();
-    } // else
-  }); // function(err) end of async.each
+    }
+    else {
+      console.log('Number of players in API: ' + totalPlayers);
+
+      // Create array of player IDs to loop through and grab data
+      var playerIdsArray = _.range(1, totalPlayers);
+
+      // Dispatch async workers to fetch data for each playerID in array
+      async.each(playerIdsArray, function(player_id, callback) {
+        var playerUrl = PLAYER_DATA_URL + player_id + '/';
+
+        // GET player JSON from premierleague.com API
+        request(playerUrl, function(error, response, body) {
+          console.log('Requesting data for: ' + player_id);
+          if (!error && response.statusCode == 200) {
+            
+            // Parse json into object
+            var playerJson = JSON.parse(body);
+            console.log('Received data for: ' + playerJson.id + '-' + playerJson.web_name);
+
+            // create Player model from schema
+            var Player = mongoose.model('Player', playerSchema);
+
+            // Instantiace concrete player with data from API
+            var player = new Player(playerJson);
+
+            // create embedded data in player record
+            player.fixtures.summary = playerJson.fixtures.summary;
+            player.fixtures.all = playerJson.fixtures.all;
+            player.fixture_history.summary = playerJson.fixture_history.summary;
+            player.fixture_history.all = playerJson.fixture_history.all;
+            player.player_id = player_id;
+            player.last_updated = Date.now();
+
+            // Query to find player by player_id so we can update it
+            var query = { 'player_id': player.player_id };
+
+            // Update Player record with data from API
+            Player.update({player_id: player_id}, player.toObject(), {upsert: true}, 
+              function(err, doc) {
+                if (err)
+                  // log error if can't write data to database
+                  console.log('ERROR UPDATING : ' + player._id + ' err: ' + err);
+                else {
+                  console.log('Updated record for: ' + player.web_name);
+                  callback();
+                }
+            }); //Player.update()
+          } // if 200 && no error
+        }); //request
+      }, //async.each()
+      function(err) {
+        if(err) { 
+          // One of the iterations produced an error.  
+          // All processing will now stop.
+          console.log('A player failed to process: ' + err);
+        } 
+        else { 
+          // No errors.  Processing done.  Close db and end process
+          console.log('All players have been processed successfully');
+          db.close();
+          process.exit();
+        } // else
+      }); // function(err) end of async.each
+        }
+      });
 } // runEPLFetcher()
 
 
-function getMaxPlayerId(callbackFunc) {
-  for (var id = STARTING_PLAYER_ID; id <= 999; id++) {
+function getMaxPlayerId(id, callback) {
+  var playerUrl = PLAYER_DATA_URL + id + '/';
+  request(playerUrl, function(error, res, body) {
     console.log('trying: ' + id);
-    var playerUrl = PLAYER_DATA_URL + id + '/';
-    var req = httpsync.get({url: playerUrl});
-    var res = req.end();
+    if (res.statusCode === 200) {
+      console.log('got a 200 for : ' + id);
+      getMaxPlayerId(id + 1, callback);
+    }
     if (res.statusCode === 404) {
-      console.log('Found max id: ' + id);
-        callbackFunc(id);
-        break;
+      console.log('got a 404 for : ' + id);
+      callback(null, id);
     }
     if (res.statusCode > 300 && res.statusCode < 303)  {
-      console.log('Got 300.  Site is updateding. ');
-      process.exit();
+      console.log('got a 300 for : ' + id);
+
+      var error = new Error('Got 300.  Site is updateding. ');
+      callback(error, null);
     }
-  }
+  });
 }
 
 runEPLFetcher();
