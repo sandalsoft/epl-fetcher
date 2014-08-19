@@ -1,22 +1,25 @@
 #!/app/bin/node
 
-// Constants
-STARTING_ID = 576;
+httpsync = require('httpsync');
+mongoose = require('mongoose');
+request = require('request');
+async = require('async');
+_ = require('underscore');
+
+
+STARTING_PLAYER_ID = 578;
 DBUSER = 'footiedb';
 DBPASSWORD = process.env.FOOTIEVIZ_MONGO_PASSWORD
 DBDATABASE = 'fantasiefootie';
 PLAYER_DATA_URL = 'http://fantasy.premierleague.com/web/api/elements/';
 FOOTIEVIZ_MONGO = 'mongodb://' + DBUSER + ':' + DBPASSWORD + '@ds053438.mongolab.com:53438/' + DBDATABASE;
 
+
+//
+//
 // Wrapper function needed for Heroku
+// 
 function runEPLFetcher() {
-  var mongoose = require('mongoose');
-  var request = require('request');
-  // var fpl = require('./fpl');
-  var async = require('async');
-  var _ = require('underscore');
-
-
 
   // Setup and connect to Mongolab DB
   console.log('Setting up Mongolab connection');
@@ -165,28 +168,26 @@ function runEPLFetcher() {
 } // runEPLFetcher()
 
 function getMaxPlayerId(callbackFunc) {
-  var httpsync = require('httpsync');
-  
-  for (var id = STARTING_ID; id <= 999; id++) {
-    console.log('Fetching: ' + id);
-    var playerUrl = PLAYER_DATA_URL + id + '/';
-    // console.log('getting: ' + playerUrl);
+  for (var id = STARTING_PLAYER_ID; id <= 999; id++) {
+    console.log('trying: ' + id);
+      var playerUrl = PLAYER_DATA_URL + id + '/';
+      // console.log('getting: ' + playerUrl);
 
-    var req = httpsync.get({
-        url: playerUrl
-    });
-    var res = req.end();
-    if (res.statusCode === 404) {
-      console.log('Found max id: ' + id);
-        callbackFunc(id);
-        break;
-    }  //if
-    if (res.statusCode > 300 && res.statusCode < 303)  {
-      console.log('Got 300.  Site is updateding. ');
-      process.exit();
-    } //if
-  } //for
-} //getMaxPlayerId()
+      var req = httpsync.get({
+          url: playerUrl
+      });
+      var res = req.end();
+      if (res.statusCode === 404) {
+        console.log('Found max id: ' + id);
+          callbackFunc(id);
+          break;
+      }
+      if (res.statusCode > 300 && res.statusCode < 303)  {
+        console.log('Got 300.  Site is updateding. ');
+        process.exit();
+      }
+  }
+}
 
 runEPLFetcher();
 // process.exit();
