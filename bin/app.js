@@ -100,7 +100,7 @@ function runEPLFetcher() {
 
 
   var totalPlayers = 0;
-  // Get max num of players by iterating GETs until 404.  See fpl.js for details
+  // Get max num of players by iterating GETs until 404. 
   getMaxPlayerId(function(id) {
       totalPlayers = id;
   });
