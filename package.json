@@ -1,10 +1,13 @@
 {
   "name": "fetch_data",
-  "version": "0.0.1",
+  "version": "0.6.8",
   "description": "Fetches FPS data",
   "main": "app.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "engines": {
+    "node": "0.10.x"
   },
   "author": "@sandalsoft",
   "license": "Proprietary for now",
@@ -19,13 +22,13 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/sandalsoft/FootieViz_API.git"
+    "url": "https://github.com/sandalsoft/epl-fetcher.git"
   },
   "keywords": [
     "epl"
   ],
   "bugs": {
-    "url": "https://github.com/sandalsoft/FootieViz_API/issues"
+    "url": "https://github.com/sandalsoft/epl-fetcher/issues"
   },
-  "homepage": "https://github.com/sandalsoft/FootieViz_API"
+  "homepage": "https://github.com/sandalsoft/epl-fetcher"
 }
