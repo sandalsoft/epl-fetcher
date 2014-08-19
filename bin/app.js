@@ -156,7 +156,7 @@ function runEPLFetcher() {
     if(err) { 
       // One of the iterations produced an error.  
       // All processing will now stop.
-      console.log('A player failed to process');
+      console.log('A player failed to process: ' + err);
     } 
     else { 
       // No errors.  Processing done.  Close db and end process
@@ -167,27 +167,24 @@ function runEPLFetcher() {
   }); // function(err) end of async.each
 } // runEPLFetcher()
 
+
 function getMaxPlayerId(callbackFunc) {
   for (var id = STARTING_PLAYER_ID; id <= 999; id++) {
     console.log('trying: ' + id);
-      var playerUrl = PLAYER_DATA_URL + id + '/';
-      // console.log('getting: ' + playerUrl);
-
-      var req = httpsync.get({
-          url: playerUrl
-      });
-      var res = req.end();
-      if (res.statusCode === 404) {
-        console.log('Found max id: ' + id);
-          callbackFunc(id);
-          break;
-      }
-      if (res.statusCode > 300 && res.statusCode < 303)  {
-        console.log('Got 300.  Site is updateding. ');
-        process.exit();
-      }
+    var playerUrl = PLAYER_DATA_URL + id + '/';
+    var req = httpsync.get({url: playerUrl});
+    var res = req.end();
+    if (res.statusCode === 404) {
+      console.log('Found max id: ' + id);
+        callbackFunc(id);
+        break;
+    }
+    if (res.statusCode > 300 && res.statusCode < 303)  {
+      console.log('Got 300.  Site is updateding. ');
+      process.exit();
+    }
   }
 }
 
 runEPLFetcher();
-// process.exit();
+
